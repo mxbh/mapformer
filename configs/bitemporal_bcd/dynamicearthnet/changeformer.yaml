@@ -1,0 +1,308 @@
+checkpoint_config:
+  by_epoch: false
+  interval: 100000
+cudnn_benchmark: false
+data:
+  samples_per_gpu: 16
+  test:
+    data_root: ./data/DynamicEarthNet/preprocessed/tiles512
+    ignore_index_bc: 6
+    ignore_index_sem: 6
+    pair_mode: consecutive
+    pipeline:
+    - imdecode_backend: tifffile
+      mean:
+      - 649.9822
+      - 862.5364
+      - 939.1118
+      rgb_only: true
+      std:
+      - 654.9196
+      - 727.9036
+      - 872.8431
+      to_float32: false
+      to_imgnet_scale: true
+      type: LoadMultipleImages
+    - imdecode_backend: tifffile
+      map_255_to_1: false
+      reduce_zero_label: false
+      type: LoadMultipleAnnotations
+    - ignore_index: 6
+      type: CreateBinaryChangeMask
+    - flip: false
+      img_scale:
+      - 512
+      - 512
+      transforms:
+      - keep_ratio: true
+        type: Resize
+      - size_divisor: 32
+        type: ResizeToMultiple
+      - type: RandomFlip
+      - mean:
+        - 123.675
+        - 116.28
+        - 103.53
+        std:
+        - 58.395
+        - 57.12
+        - 57.375
+        to_rgb: true
+        type: NormalizeMultiImages
+      - keys:
+        - img
+        type: ImageToTensor
+      - keys:
+        - img
+        type: Collect
+      type: MultiScaleFlipAug
+    split: test10
+    test_mode: true
+    type: DynamicEarthNetCCD
+  train:
+  - data_root: ./data/DynamicEarthNet/preprocessed/tiles512
+    ignore_index_bc: 6
+    ignore_index_sem: 6
+    pair_mode: all
+    pipeline:
+    - imdecode_backend: tifffile
+      mean:
+      - 649.9822
+      - 862.5364
+      - 939.1118
+      rgb_only: true
+      std:
+      - 654.9196
+      - 727.9036
+      - 872.8431
+      to_float32: false
+      to_imgnet_scale: true
+      type: LoadMultipleImages
+    - imdecode_backend: tifffile
+      map_255_to_1: false
+      reduce_zero_label: false
+      type: LoadMultipleAnnotations
+    - ignore_index: 6
+      type: CreateBinaryChangeMask
+    - img_scale:
+      - 512
+      - 512
+      ratio_range:
+      - 0.5
+      - 2.0
+      type: Resize
+    - cat_max_ratio: 0.75
+      crop_size:
+      - 384
+      - 384
+      type: RandomCrop
+    - prob: 0.5
+      type: RandomFlip
+    - type: PhotoMetricDistortionMultiImages
+    - mean:
+      - 123.675
+      - 116.28
+      - 103.53
+      std:
+      - 58.395
+      - 57.12
+      - 57.375
+      to_rgb: true
+      type: NormalizeMultiImages
+    - pad_val: 0
+      seg_pad_val: 6
+      size:
+      - 384
+      - 384
+      type: Pad
+    - type: CustomFormatBundle
+    - keys:
+      - img
+      - gt_semantic_seg
+      type: Collect
+    split: train35
+    test_mode: false
+    type: DynamicEarthNetCCD
+  val:
+    data_root: ./data/DynamicEarthNet/preprocessed/tiles512
+    ignore_index_bc: 6
+    ignore_index_sem: 6
+    pair_mode: consecutive
+    pipeline:
+    - imdecode_backend: tifffile
+      mean:
+      - 649.9822
+      - 862.5364
+      - 939.1118
+      rgb_only: true
+      std:
+      - 654.9196
+      - 727.9036
+      - 872.8431
+      to_float32: false
+      to_imgnet_scale: true
+      type: LoadMultipleImages
+    - imdecode_backend: tifffile
+      map_255_to_1: false
+      reduce_zero_label: false
+      type: LoadMultipleAnnotations
+    - ignore_index: 6
+      type: CreateBinaryChangeMask
+    - flip: false
+      img_scale:
+      - 512
+      - 512
+      transforms:
+      - keep_ratio: true
+        type: Resize
+      - size_divisor: 32
+        type: ResizeToMultiple
+      - type: RandomFlip
+      - mean:
+        - 123.675
+        - 116.28
+        - 103.53
+        std:
+        - 58.395
+        - 57.12
+        - 57.375
+        to_rgb: true
+        type: NormalizeMultiImages
+      - keys:
+        - img
+        type: ImageToTensor
+      - keys:
+        - img
+        type: Collect
+      type: MultiScaleFlipAug
+    split: val10
+    test_mode: true
+    type: DynamicEarthNetCCD
+  workers_per_gpu: 8
+dist_params:
+  backend: nccl
+evaluation:
+  interval: 2000
+  metric:
+  - mIoU
+  - BC
+  - SC
+  - SCS
+  rule: greater
+  save_best: BC
+find_unused_parameters: true
+gpu_ids:
+- 0
+load_from: null
+log_config:
+  hooks:
+  - by_epoch: false
+    init_kwargs:
+      project: mapformer
+    log_artifact: false
+    type: WandbLoggerHook
+    with_step: false
+  - by_epoch: false
+    type: TextLoggerHook
+  interval: 50
+log_level: INFO
+lr_config:
+  by_epoch: false
+  min_lr: 0.0
+  policy: poly
+  power: 1.0
+  warmup: linear
+  warmup_iters: 1500
+  warmup_ratio: 1.0e-06
+model:
+  backbone:
+    attn_drop_rate: 0.0
+    drop_path_rate: 0.1
+    drop_rate: 0.0
+    embed_dims: 64
+    in_channels: 3
+    mlp_ratio: 4
+    num_heads:
+    - 1
+    - 2
+    - 5
+    - 8
+    num_layers:
+    - 3
+    - 4
+    - 6
+    - 3
+    num_stages: 4
+    out_indices:
+    - 0
+    - 1
+    - 2
+    - 3
+    patch_sizes:
+    - 7
+    - 3
+    - 3
+    - 3
+    qkv_bias: true
+    sr_ratios:
+    - 8
+    - 4
+    - 2
+    - 1
+    type: MixVisionTransformer
+  decode_head:
+    align_corners: false
+    channels: 256
+    dropout_ratio: 0.1
+    in_channels:
+    - 128
+    - 256
+    - 640
+    - 1024
+    in_index:
+    - 0
+    - 1
+    - 2
+    - 3
+    loss_decode:
+      loss_weight: 1.0
+      type: CrossEntropyLoss
+      use_sigmoid: false
+    norm_cfg:
+      requires_grad: true
+      type: BN
+    num_classes: 2
+    type: SegformerHead
+  neck:
+    policy: concat
+    type: FeatureFusionNeck
+  pretrained: ./model_ckpt/mit_b2_20220624-66e8bf70.pth
+  test_cfg:
+    mode: whole
+  train_cfg: {}
+  type: SiamEncoderDecoder
+optimizer:
+  betas:
+  - 0.9
+  - 0.999
+  lr: 6.0e-05
+  paramwise_cfg:
+    custom_keys:
+      head:
+        lr_mult: 10.0
+      norm:
+        decay_mult: 0.0
+      pos_block:
+        decay_mult: 0.0
+  type: AdamW
+  weight_decay: 0.01
+optimizer_config: {}
+output_dir: runs/bitemporal_bcd/dynamicearthnet/changeformer
+resume_from: null
+run_name: changeformer
+runner:
+  max_iters: 32000
+  type: IterBasedRunner
+workflow:
+- - train
+  - 1

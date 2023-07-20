@@ -1,0 +1,311 @@
+checkpoint_config:
+  by_epoch: false
+  interval: 100000
+cudnn_benchmark: false
+data:
+  samples_per_gpu: 16
+  test:
+    data_root: ./data/HRSCD/preprocessed/tiles2000
+    ignore_index_bc: 255
+    ignore_index_sem: 255
+    pipeline:
+    - imdecode_backend: tifffile
+      mean:
+      - 0.0
+      - 0.0
+      - 0.0
+      rgb_only: true
+      std:
+      - 1.0
+      - 1.0
+      - 1.0
+      to_float32: false
+      to_imgnet_scale: false
+      type: LoadMultipleImages
+    - imdecode_backend: tifffile
+      map_255_to_1: false
+      reduce_zero_label: true
+      type: LoadCCDAnnotations
+    - flip: false
+      img_scale:
+      - 2000
+      - 2000
+      transforms:
+      - keep_ratio: true
+        type: Resize
+      - size_divisor: 32
+        type: ResizeToMultiple
+      - type: RandomFlip
+      - mean:
+        - 123.675
+        - 116.28
+        - 103.53
+        std:
+        - 58.395
+        - 57.12
+        - 57.375
+        to_rgb: true
+        type: NormalizeMultiImages
+      - keys:
+        - img
+        type: ImageToTensor
+      - keys:
+        - img
+        - gt_semantic_seg_pre
+        type: Collect
+      type: MultiScaleFlipAug
+    split: test50
+    test_mode: true
+    type: HRSCDatasetCCD
+  train:
+  - data_root: ./data/HRSCD/preprocessed/tiles500
+    ignore_index_bc: 255
+    ignore_index_sem: 255
+    pipeline:
+    - imdecode_backend: tifffile
+      mean:
+      - 0.0
+      - 0.0
+      - 0.0
+      rgb_only: true
+      std:
+      - 1.0
+      - 1.0
+      - 1.0
+      to_float32: false
+      to_imgnet_scale: false
+      type: LoadMultipleImages
+    - imdecode_backend: tifffile
+      map_255_to_1: false
+      reduce_zero_label: true
+      type: LoadCCDAnnotations
+    - img_scale:
+      - 500
+      - 500
+      ratio_range:
+      - 0.5
+      - 2.0
+      type: Resize
+    - cat_max_ratio: 0.75
+      crop_size:
+      - 384
+      - 384
+      type: RandomCrop
+    - prob: 0.5
+      type: RandomFlip
+    - type: PhotoMetricDistortionMultiImages
+    - mean:
+      - 123.675
+      - 116.28
+      - 103.53
+      std:
+      - 58.395
+      - 57.12
+      - 57.375
+      to_rgb: true
+      type: NormalizeMultiImages
+    - pad_val: 0
+      seg_pad_val: 255
+      size:
+      - 384
+      - 384
+      type: Pad
+    - type: CustomFormatBundle
+    - keys:
+      - img
+      - gt_semantic_seg
+      - gt_semantic_seg_pre
+      - gt_semantic_seg_post
+      type: Collect
+    split: train191
+    test_mode: false
+    type: HRSCDatasetCCD
+  val:
+    data_root: ./data/HRSCD/preprocessed/tiles2000
+    ignore_index_bc: 255
+    ignore_index_sem: 255
+    pipeline:
+    - imdecode_backend: tifffile
+      mean:
+      - 0.0
+      - 0.0
+      - 0.0
+      rgb_only: true
+      std:
+      - 1.0
+      - 1.0
+      - 1.0
+      to_float32: false
+      to_imgnet_scale: false
+      type: LoadMultipleImages
+    - imdecode_backend: tifffile
+      map_255_to_1: false
+      reduce_zero_label: true
+      type: LoadCCDAnnotations
+    - flip: false
+      img_scale:
+      - 2000
+      - 2000
+      transforms:
+      - keep_ratio: true
+        type: Resize
+      - size_divisor: 32
+        type: ResizeToMultiple
+      - type: RandomFlip
+      - mean:
+        - 123.675
+        - 116.28
+        - 103.53
+        std:
+        - 58.395
+        - 57.12
+        - 57.375
+        to_rgb: true
+        type: NormalizeMultiImages
+      - keys:
+        - img
+        type: ImageToTensor
+      - keys:
+        - img
+        - gt_semantic_seg_pre
+        type: Collect
+      type: MultiScaleFlipAug
+    split: val50
+    test_mode: true
+    type: HRSCDatasetCCD
+  workers_per_gpu: 8
+dist_params:
+  backend: nccl
+evaluation:
+  interval: 2000
+  metric:
+  - mIoU
+  - BC
+  - SC
+  - SCS
+  rule: greater
+  save_best: BC
+find_unused_parameters: true
+gpu_ids:
+- 0
+load_from: null
+log_config:
+  hooks:
+  - by_epoch: false
+    init_kwargs:
+      project: mapformer
+    log_artifact: false
+    type: WandbLoggerHook
+    with_step: false
+  - by_epoch: false
+    type: TextLoggerHook
+  interval: 50
+log_level: INFO
+lr_config:
+  by_epoch: false
+  min_lr: 0.0
+  policy: poly
+  power: 1.0
+  warmup: linear
+  warmup_iters: 1500
+  warmup_ratio: 1.0e-06
+model:
+  backbone:
+    ori_type: mit_b2
+    style: pytorch
+    type: BitemporalBackbone
+  decode_head:
+    bc_head:
+      align_corners: false
+      balance_pos_neg: false
+      channels: 256
+      contrastive_loss_weight: 1.0
+      dropout_ratio: 0.1
+      extra_branch: false
+      feature_strides:
+      - 4
+      - 8
+      - 16
+      - 32
+      ignore_index: 255
+      in_channels:
+      - 64
+      - 128
+      - 320
+      - 512
+      in_index:
+      - 0
+      - 1
+      - 2
+      - 3
+      k: 10
+      loss_decode:
+        loss_weight: 1.0
+        type: CrossEntropyLoss
+        use_sigmoid: false
+      map_encoder:
+        n_semantic_classes: 5
+        out_channels: 32
+        scale: 0.25
+        type: BasicMapEncoder
+      norm_cfg:
+        requires_grad: true
+        type: BN
+      num_classes: 2
+      type: MapFormerHead
+    sem_head:
+      align_corners: false
+      channels: 256
+      dropout_ratio: 0.1
+      ignore_index: 255
+      in_channels:
+      - 64
+      - 128
+      - 320
+      - 512
+      in_index:
+      - 0
+      - 1
+      - 2
+      - 3
+      loss_decode:
+        loss_weight: 1.0
+        type: CrossEntropyLoss
+        use_sigmoid: false
+      norm_cfg:
+        requires_grad: true
+        type: BN
+      num_classes: 5
+      type: DummySemHead
+    type: BaseHeadCCD
+  inference_tile_size: 504
+  pretrained: ./model_ckpt/mit_b2.pth
+  test_cfg:
+    mode: whole
+  train_cfg: {}
+  type: EncoderDecoderCCD
+optimizer:
+  betas:
+  - 0.9
+  - 0.999
+  lr: 6.0e-05
+  paramwise_cfg:
+    custom_keys:
+      head:
+        lr_mult: 10.0
+      norm:
+        decay_mult: 0.0
+      pos_block:
+        decay_mult: 0.0
+  type: AdamW
+  weight_decay: 0.01
+optimizer_config: {}
+output_dir: runs/conditional_bcd/hrscd/mapformer
+resume_from: null
+run_name: mapformer
+runner:
+  max_iters: 32000
+  type: IterBasedRunner
+workflow:
+- - train
+  - 1
