@@ -1,4 +1,5 @@
 # MapFormer: Boosting Change Detection by Using Semantic Pre-change Information
+This is the official codebase for the ICCV 2023 paper "MapFormer: Boosting Change Detection by Using Semantic Pre-change Information" by Maximilian Bernhard, Niklas Strauß, and Matthias Schubert.
 
 ## Abstract
 > Change detection in remote sensing imagery is essential for a variety of applications such as urban planning, disaster management, and climate research. However, existing methods for identifying semantically changed areas overlook the availability of semantic information in the form of existing maps describing features of the earth's surface.
@@ -7,8 +8,7 @@ Motivated by this observation, we propose the new task of *Conditional Change De
 To fully exploit the extra information, we propose *MapFormer*, a novel architecture based on a multi-modal feature fusion module that allows for feature processing conditioned on the available semantic information. We further employ a supervised, cross-modal contrastive loss to guide the learning of visual representations. Our approach outperforms existing change detection methods by an absolute 11.7\% and 18.4\% in terms of binary change IoU on DynamicEarthNet and HRSCD, respectively. Furthermore, we demonstrate the robustness of our approach to the quality of the pre-change semantic information and the absence pre-change imagery.
 The code is available at https://github.com/mxbh/mapformer.
 
-This is the code used to generate the results in the paper. The repository is based on [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) and the [FHD repository](https://github.com/ZSVOS/FHD). Particularly, our main method components are implemented in `./mmseg/models/ccd/bc_heads.py`.
-
+This repository is based on [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) and the [FHD repository](https://github.com/ZSVOS/FHD). Particularly, our main method components are implemented in `./mmseg/models/ccd/bc_heads.py`.
 
 ## Requirements
 * Python >= 3.9
