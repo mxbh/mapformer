@@ -9,22 +9,6 @@ The code is available at https://github.com/mxbh/mapformer.
 
 This is the code used to generate the results in the paper. The repository is based on [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) and the [FHD repository](https://github.com/ZSVOS/FHD). Particularly, our main method components are implemented in `./mmseg/models/ccd/bc_heads.py`.
 
-## Training
-Before training, install the requirements, download the pre-trained backbone weights, and prepare the datasets (see below). Then run:
-```
-python tools/train.py ./configs/conditional_bcd/dynamicearthnet/mapformer.yaml \
-  --work-dir=./runs/conditional_bcd/dynamicearthnet/mapformer
-```
-For other experiments, simply replace the paths for other configs (see `./configs`).
-
-## Testing
-To get the results on the test set, run:
-```
-python tools/test.py ./path/to/config.yaml \
-  ./path/to/checkpoint.pth \
-  --eval BC BC_precision BC_recall SC SCS mIoU \
-  --samples-per-gpu=1
-```
 
 ## Requirements
 * Python >= 3.9
@@ -115,3 +99,20 @@ python ./tools/convert_datasets/create_hrscd_tiles.py \
 * Download MiT-b2 weights from [here](https://drive.google.com/drive/folders/1b7bwrInTW4VLEm27YawHOAMSMikga2Ia) (see [SegFormer repo](https://github.com/NVlabs/SegFormer#training)) and put them to `./model_ckpt/mit_b2.pth`.
 * As the [open-cd codebase](https://github.com/likyoo/open-cd) uses the mmseg implementation of MiT, download the corresponding weights from [openmmlab](https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segformer/mit_b2_20220624-66e8bf70.pth) as well and put them to `./model_ckpt/mit_b2_20220624-66e8bf70.pth`. 
 
+
+## Training
+Before training, install the requirements, download the pre-trained backbone weights, and prepare the datasets (see below). Then run:
+```
+python tools/train.py ./configs/conditional_bcd/dynamicearthnet/mapformer.yaml \
+  --work-dir=./runs/conditional_bcd/dynamicearthnet/mapformer
+```
+For other experiments, simply replace the paths for other configs (see `./configs`).
+
+## Testing
+To get the results on the test set, run:
+```
+python tools/test.py ./path/to/config.yaml \
+  ./path/to/checkpoint.pth \
+  --eval BC BC_precision BC_recall SC SCS mIoU \
+  --samples-per-gpu=1
+```
