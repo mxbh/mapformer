@@ -96,7 +96,7 @@ python ./tools/convert_datasets/create_hrscd_tiles.py \
 * Manually put the provided split files in `./data/HRSCD/preprocessed/tilesXXX/splits/` (e.g., via symbolic links).
 
 ## Pre-trained Backbones
-* Download MiT-b2 weights from [here](https://drive.google.com/drive/folders/1b7bwrInTW4VLEm27YawHOAMSMikga2Ia) (see [SegFormer repo](https://github.com/NVlabs/SegFormer#training)) and put them to `./model_ckpt/mit_b2.pth`.
+* Download MiT-b2 weights from the official [SegFormer repo](https://github.com/NVlabs/SegFormer#training) and put them to `./model_ckpt/mit_b2.pth`.
 * As the [open-cd codebase](https://github.com/likyoo/open-cd) uses the mmseg implementation of MiT, download the corresponding weights from [openmmlab](https://download.openmmlab.com/mmsegmentation/v0.5/pretrain/segformer/mit_b2_20220624-66e8bf70.pth) as well and put them to `./model_ckpt/mit_b2_20220624-66e8bf70.pth`. 
 
 
